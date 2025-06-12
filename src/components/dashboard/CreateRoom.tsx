@@ -2,22 +2,31 @@
 
 import { useState } from "react";
 import { SlPencil } from "react-icons/sl";
-import { RiRobot2Line } from "react-icons/ri";
+// import { RiRobot2Line } from "react-icons/ri";
 import { createRoom } from "~/app/actions/rooms";
-import { createRoomWithPrompt } from "~/app/actions/rooms";
+// import { createRoomWithPrompt } from "~/app/actions/rooms";
 import { useRouter } from "next/navigation";
 
 export default function CreateRoom() {
   const [hover, setHover] = useState(false);
   const router = useRouter();
 
-const handleCreateWithPrompt = async () => {
-  const userPrompt = window.prompt("Describe tu diseño (ej. pantalla de registro tipo Facebook):");
-  if (!userPrompt) return;
+  // const handleCreateWithPrompt = async () => {
+  //   const userPrompt = window.prompt("Describe tu diseño (ej. pantalla de registro tipo Facebook):");
+  //   if (!userPrompt) return;
 
-  const roomId = await createRoomWithPrompt(userPrompt);
-  router.push(`/dashboard/${roomId}?initialPrompt=${encodeURIComponent(userPrompt)}`);
-};
+  //   try {
+  //     setIsGenerating(true);
+  //     const roomId = await createRoomWithPrompt(userPrompt);
+  //     router.push(`/dashboard/${roomId}?initialPrompt=${encodeURIComponent(userPrompt)}`);
+  //   } catch (error) {
+  //     console.error("Error al crear la sala:", error);
+  //     alert("Hubo un error al crear la sala. Por favor, intenta de nuevo.");
+  //   } finally {
+  //     setIsGenerating(false);
+  //   }
+  // };
+
   return (
     <div className="flex gap-4">
       {/* Botón clásico */}
@@ -40,7 +49,7 @@ const handleCreateWithPrompt = async () => {
         </div>
       </div>
 
-      {/* Botón con IA */}
+      {/* Botón con IA - Comentado
       <div
         onMouseOver={() => setHover(true)}
         onMouseLeave={() => setHover(false)}
@@ -59,6 +68,7 @@ const handleCreateWithPrompt = async () => {
           </p>
         </div>
       </div>
+      */}
     </div>
   );
 }

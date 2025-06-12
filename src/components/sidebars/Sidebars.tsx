@@ -9,7 +9,7 @@ import { Color, LayerType } from "~/types";
 import { colorToCss, connectionIdToColor, hexToRgb } from "~/utils";
 import LayerButton from "./LayerButton";
 import NumberInput from "./NumberInput";
-import { BsCircleHalf, BsCheckSquare, BsCalendar, BsClock, BsList, BsSquare } from "react-icons/bs";
+import { BsCircleHalf, BsCheckSquare, BsCalendar, BsClock, BsList, BsSquare, BsPhone } from "react-icons/bs";
 import { RiRoundedCorner } from "react-icons/ri";
 import ColorPicker from "./ColorPicker";
 import Dropdown from "./Dropdown";
@@ -170,7 +170,7 @@ export default function Sidebars({
               reversedLayerIds.map((id) => {
                 const layer = layers?.get(id);
                 const isSelected = selection?.includes(id);
-                const isBackground = layer?.type === LayerType.Rectangle && layer.isBackground;
+                const isBackground = layer?.type === LayerType.Background;
                 const hasParent = layer?.parentId !== undefined;
 
                 if (hasParent && !isBackground) {
@@ -180,7 +180,7 @@ export default function Sidebars({
                 const renderLayer = (layerId: string, indent: number = 0) => {
                   const currentLayer = layers?.get(layerId);
                   const isCurrentSelected = selection?.includes(layerId);
-                  const isCurrentBackground = currentLayer?.type === LayerType.Rectangle && currentLayer.isBackground;
+                  const isCurrentBackground = currentLayer?.type === LayerType.Background;
 
                   const children = reversedLayerIds.filter(childId => {
                     const childLayer = layers?.get(childId);
@@ -209,6 +209,8 @@ export default function Sidebars({
                         return <BsCalendar className="h-3 w-3 text-gray-500" />;
                       case LayerType.TimePicker:
                         return <BsClock className="h-3 w-3 text-gray-500" />;
+                      case LayerType.Background:
+                        return <BsPhone className="h-3 w-3 text-blue-500" />;
                       default:
                         return null;
                     }
@@ -236,6 +238,8 @@ export default function Sidebars({
                         return "Date Picker";
                       case LayerType.TimePicker:
                         return "Time Picker";
+                      case LayerType.Background:
+                        return "Background";
                       default:
                         return "";
                     }
@@ -457,7 +461,7 @@ export default function Sidebars({
                             Weight
                           </p>
                           <Dropdown
-                            value={layer.fontWeight.toString()}
+                            value={(layer.fontWeight ?? 400).toString()}
                             onChange={(value) => {
                               updateLayer({ fontWeight: Number(value) });
                             }}

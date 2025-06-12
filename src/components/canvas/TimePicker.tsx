@@ -1,3 +1,4 @@
+import { useMutation } from "@liveblocks/react";
 import { TimePickerLayer } from "~/types";
 import { colorToCss } from "~/utils";
 
@@ -11,6 +12,21 @@ export default function TimePicker({
   onPointerDown: (e: React.PointerEvent, layerId: string) => void;
 }) {
   const { x, y, width, height, fill, stroke, opacity, cornerRadius, value, placeholder, fontSize, fontFamily, textFill } = layer;
+
+  const updateTime = useMutation(
+    ({ storage }, newValue: string) => {
+      const liveLayers = storage.get("layers");
+      const layer = liveLayers.get(id);
+      if (layer) {
+        layer.update({ value: newValue });
+      }
+    },
+    [id],
+  );
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    updateTime(e.target.value);
+  };
 
   return (
     <g className="group">
@@ -50,6 +66,7 @@ export default function TimePicker({
           <input
             type="time"
             value={value || ""}
+            onChange={handleChange}
             placeholder={placeholder || "Select time..."}
             style={{
               width: "100%",

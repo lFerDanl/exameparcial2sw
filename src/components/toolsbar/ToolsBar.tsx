@@ -1,9 +1,10 @@
 import { CanvasMode, CanvasState, LayerType } from "~/types";
 import SelectionButton from "./SelectionButton";
+import HandToolButton from "./HandToolButton";
 import ShapesSelectionButton from "./ShapesSelectionButton";
 import ZoomInButton from "./ZoomInButton";
 import ZoomOutButton from "./ZoomOutButton";
-import PencilButton from "./PencilButton";
+// import PencilButton from "./PencilButton";
 import TextButton from "./TextButton";
 import UndoButton from "./UndoButton";
 import RedoButton from "./RedoButton";
@@ -40,34 +41,30 @@ export default function ToolsBar({
             canvasState.mode === CanvasMode.Translating ||
             canvasState.mode === CanvasMode.SelectionNet ||
             canvasState.mode === CanvasMode.Pressing ||
-            canvasState.mode === CanvasMode.Resizing ||
-            canvasState.mode === CanvasMode.Dragging
+            canvasState.mode === CanvasMode.Resizing
           }
-          canvasMode={canvasState.mode}
-          onClick={(canvasMode) =>
-            setCanvasState(
-              canvasMode === CanvasMode.Dragging
-                ? { mode: canvasMode, origin: null }
-                : { mode: canvasMode },
-            )
-          }
+          onClick={() => setCanvasState({ mode: CanvasMode.None })}
+        />
+        <HandToolButton
+          isActive={canvasState.mode === CanvasMode.Dragging}
+          onClick={() => setCanvasState({ mode: CanvasMode.Dragging, origin: null })}
         />
         <ShapesSelectionButton
           isActive={
             canvasState.mode === CanvasMode.Inserting &&
             ([LayerType.Rectangle, LayerType.Ellipse].includes(
               canvasState.layerType as LayerType
-            ) )
+            ))
           }
           canvasState={canvasState}
           onClick={(layerType) =>
             setCanvasState({ mode: CanvasMode.Inserting, layerType })
           }
         />
-        <PencilButton
+        {/* <PencilButton
           isActive={canvasState.mode === CanvasMode.Pencil}
           onClick={() => setCanvasState({ mode: CanvasMode.Pencil })}
-        />
+        /> */}
         <TextButton
           isActive={
             canvasState.mode === CanvasMode.Inserting &&

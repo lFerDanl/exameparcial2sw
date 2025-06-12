@@ -21,6 +21,7 @@ export enum LayerType {
   Checkbox,
   DatePicker,
   TimePicker,
+  Background,
 }
 
 export type RectangleLayer = {
@@ -34,7 +35,6 @@ export type RectangleLayer = {
   opacity: number;
   cornerRadius?: number;
   parentId?: string;
-  isBackground?: boolean;
 };
 
 export type EllipseLayer = {
@@ -186,7 +186,20 @@ export type TimePickerLayer = {
   parentId?: string;
 };
 
-export type Layer = RectangleLayer | EllipseLayer | PathLayer | TextLayer | InputLayer | ButtonLayer | SelectorLayer | CheckboxLayer | DatePickerLayer | TimePickerLayer;
+export type BackgroundLayer = {
+  type: LayerType.Background;
+  x: number;
+  y: number;
+  width: 448;
+  height: 950;
+  fill: Color;
+  stroke: Color;
+  opacity: number;
+  cornerRadius?: number;
+  parentId?: string;
+};
+
+export type Layer = RectangleLayer | EllipseLayer | PathLayer | TextLayer | InputLayer | ButtonLayer | SelectorLayer | CheckboxLayer | DatePickerLayer | TimePickerLayer | BackgroundLayer;
 
 export type Point = {
   x: number;
@@ -225,7 +238,7 @@ export type CanvasState =
     }
   | {
       mode: CanvasMode.Inserting;
-      layerType: LayerType.Rectangle | LayerType.Ellipse | LayerType.Text | LayerType.Input | LayerType.Button | LayerType.Selector | LayerType.Checkbox | LayerType.DatePicker | LayerType.TimePicker;
+      layerType: LayerType.Rectangle | LayerType.Ellipse | LayerType.Text | LayerType.Input | LayerType.Button | LayerType.Selector | LayerType.Checkbox | LayerType.DatePicker | LayerType.TimePicker | LayerType.Background;
     }
   | {
       mode: CanvasMode.Pencil;

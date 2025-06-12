@@ -35,6 +35,7 @@ import {
   CheckboxLayer,
   DatePickerLayer,
   TimePickerLayer,
+  BackgroundLayer,
 } from "~/types";
 import { nanoid } from "nanoid";
 import { LiveObject } from "@liveblocks/client";
@@ -66,17 +67,16 @@ const MAX_LAYERS = 100;
 // Add this function before the Canvas component
 const createDesignPrompt = (promptText: string) => `
 Eres un diseñador experto en UI. Genera un diseño en formato JSON para un lienzo de interfaz.
-El layer que va representar el background debe ser de tamaño width 448 y height 950.
 
 El JSON debe seguir esta estructura:
 {
   "layers": {
     "[ID]": {
-      "type": número, // 0: Rectángulo, 1: Elipse, 3: Texto, 4: Input, 5: Button, 6: Selector, 7: Checkbox, 8: DatePicker, 9: TimePicker
+      "type": número, // 0: Rectángulo, 1: Elipse, 3: Texto, 4: Input, 5: Button, 6: Selector, 7: Checkbox, 8: DatePicker, 9: TimePicker, 10: Background
       "x": número,
       "y": número,
-      "height": número,  // 20 para Checkbox
-      "width": número,  // 20 para Checkbox
+      "height": número,  // 20 para Checkbox, 950 para Background
+      "width": número,  // 20 para Checkbox, 448 para Background
       "fill": {"r": 255, "g": 255, "b": 255},
       "stroke": {"r": 0, "g": 0, "b": 0},
       "opacity": 100,
@@ -92,7 +92,6 @@ El JSON debe seguir esta estructura:
       "label": "Label", // para Checkbox
       "value": "2024-03-20", // opcional para DatePicker
       "format": "YYYY-MM-DD", // opcional para DatePicker, TimePicker
-      "isBackground": boolean, // true para rectángulos que actúan como backgrounds/padres
       "parentId": "ID" // ID del layer padre (solo para hijos)
     }
   },
@@ -101,11 +100,11 @@ El JSON debe seguir esta estructura:
 }
 
 Reglas para la jerarquía:
-1. El primer rectángulo debe ser un background (isBackground: true)
-2. Los elementos que estén dentro de un rectángulo background deben tener su parentId
-3. Los rectángulos que no estén dentro de otro rectángulo deben ser backgrounds
-4. Solo los rectángulos pueden ser backgrounds/padres
-5. Los elementos hijos deben estar posicionados dentro de los límites de su padre
+1. El primer layer debe ser un Background (type: 10) con width: 448 y height: 950
+2. Todos los demás elementos deben tener un parentId que apunte al ID del Background
+3. Los elementos hijos deben estar posicionados dentro de los límites del Background (x entre 0 y 448, y entre 0 y 950)
+4. Los Background (type: 10) no pueden tener parentId
+5. Los IDs deben ser strings con caracters completamente aleatorios de 14 caracteres (usando letras mayúsculas, minúsculas y números todo mezclado)
 
 Hazlo con base en esta descripción: ${promptText}
 
@@ -332,32 +331,66 @@ export default function Canvas({
       Por favor, analiza esta imagen y conviértela en una representación JSON que pueda ser utilizada en una herramienta de diseño.
       
       Identifica todos los elementos de la interfaz como:
+      - Background (type: 10) - Debe ser el primer elemento con width: 448 y height: 950
       - Encabezados, barras de navegación (rectángulos)
-      - Botones (rectángulos)
-      - Elementos de texto (etiquetas, títulos)
       - Imágenes o marcadores de posición (rectángulos con X)
       - los elementos que tengan imágenes, tengan el estilo de https://placehold.co
       - los elementos de la interfaz asegúrate de que los elementos estén correctamente organizados y que estén en el orden correcto.
-      
+      - Rectángulos (type: 0)
+      - Elipses (type: 1)
+      - Textos (type: 3)
+      - Inputs (type: 4) - Campos de texto, áreas de texto
+      - Botones (type: 5) - Botones de acción, enlaces
+      - Selectores (type: 6) - Menús desplegables, listas de selección
+      - Checkboxes (type: 7) - Casillas de verificación
+      - DatePickers (type: 8) - Selectores de fecha
+      - TimePickers (type: 9) - Selectores de hora
       
       El JSON debe seguir esta estructura:
       {
         "layers": {
           "[ID]": {
-            "type": [0 para Rectángulo, 1 para Elipse, 3 para Texto],
-            "x": [posición_x],
-            "y": [posición_y],
-            "height": [altura],
-            "width": [ancho],
-            "fill": {"r": [0-255], "g": [0-255], "b": [0-255]},
-            "stroke": {"r": [0-255], "g": [0-255], "b": [0-255]},
-            "opacity": [0-100]
+            "type": número, // 0: Rectángulo, 1: Elipse, 3: Texto, 4: Input, 5: Button, 6: Selector, 7: Checkbox, 8: DatePicker, 9: TimePicker, 10: Background
+            "x": número,
+            "y": número,
+            "height": número,  // 20 para Checkbox, 950 para Background
+            "width": número,  // 20 para Checkbox, 448 para Background
+            "fill": {"r": 255, "g": 255, "b": 255},
+            "stroke": {"r": 0, "g": 0, "b": 0},
+            "opacity": 100,
+            "cornerRadius": número, // opcional
+            "text": "Texto", // para Text, Button
+            "fontSize": 24, // opcional para Input, Button, Selector, Checkbox, DatePicker, TimePicker
+            "fontFamily": "Arial", // opcional para Input, Button, Selector, Checkbox, DatePicker, TimePicker
+            "textFill": {"r": 0, "g": 0, "b": 0}, // opcional para Input, Button, Selector, Checkbox, DatePicker, TimePicker
+            "placeholder": "Placeholder", // opcional para Input, DatePicker, TimePicker
+            "options": ["Option 1", "Option 2"], // para Selector
+            "selectedOption": "Option 1", // opcional para Selector
+            "checked": false, // para Checkbox
+            "label": "Label", // para Checkbox
+            "value": "2024-03-20", // opcional para DatePicker
+            "format": "YYYY-MM-DD", // opcional para DatePicker, TimePicker
+            "parentId": "ID" // ID del layer padre (solo para hijos)
           }
-          // Para elementos de texto (tipo 3), incluir: fontSize, text, fontWeight, fontFamily
         },
-        "layerIds": ["[ID1]", "[ID2]", ...],
+        "layerIds": ["id1", "id2"],
         "roomColor": {"r": 30, "g": 30, "b": 30}
       }
+
+      Reglas para la jerarquía:
+      1. El primer layer debe ser un Background (type: 10) con width: 448 y height: 950
+      2. Todos los demás elementos deben tener un parentId que apunte al ID del Background
+      3. Los elementos hijos deben estar posicionados dentro de los límites del Background (x entre 0 y 448, y entre 0 y 950)
+      4. Los Background (type: 10) no pueden tener parentId
+      5. Los IDs deben ser strings con caracters completamente aleatorios de 14 caracteres (usando letras mayúsculas, minúsculas y números todo mezclado)
+
+      Para cada tipo de componente, asegúrate de incluir sus propiedades específicas:
+      - Input: placeholder, fontSize, fontFamily, textFill
+      - Button: text, fontSize, fontFamily, textFill, cornerRadius
+      - Selector: options, selectedOption, fontSize, fontFamily, textFill
+      - Checkbox: checked, label, fontSize, fontFamily, textFill
+      - DatePicker: value, placeholder, format, fontSize, fontFamily, textFill
+      - TimePicker: value, placeholder, format, fontSize, fontFamily, textFill
       
       Responde solo con el JSON, sin explicaciones.`;
 
@@ -567,7 +600,7 @@ useEffect(() => {
   const insertLayer = useMutation(
     (
       { storage, setMyPresence },
-      layerType: LayerType.Rectangle | LayerType.Ellipse | LayerType.Text | LayerType.Input | LayerType.Button | LayerType.Selector | LayerType.Checkbox | LayerType.DatePicker | LayerType.TimePicker,
+      layerType: LayerType.Rectangle | LayerType.Ellipse | LayerType.Text | LayerType.Input | LayerType.Button | LayerType.Selector | LayerType.Checkbox | LayerType.DatePicker | LayerType.TimePicker | LayerType.Background,
       position: Point,
     ) => {
       const liveLayers = storage.get("layers");
@@ -579,195 +612,194 @@ useEffect(() => {
       const layerId = nanoid();
       let layer: LiveObject<Layer> | null = null;
 
-      // Función para verificar si un punto está dentro de un rectángulo
-      const isPointInsideRectangle = (point: Point, rect: RectangleLayer) => {
+      // Función para verificar si un punto está dentro de un background
+      const isPointInsideBackground = (point: Point, background: BackgroundLayer) => {
         return (
-          point.x >= rect.x &&
-          point.x <= rect.x + rect.width &&
-          point.y >= rect.y &&
-          point.y <= rect.y + rect.height
+          point.x >= background.x &&
+          point.x <= background.x + background.width &&
+          point.y >= background.y &&
+          point.y <= background.y + background.height
         );
       };
 
-      // Encontrar el padre potencial (rectángulo que contiene el punto)
+      // Encontrar el padre potencial (background que contiene el punto)
       let parentId: string | undefined;
-      let isBackground = false;
 
-      if (layerType === LayerType.Rectangle) {
-        // Si es un rectángulo, verificar si es el primer layer o si no está dentro de ningún otro rectángulo
-        const existingLayers = Array.from(liveLayers.entries());
-        const isFirstLayer = existingLayers.length === 0;
-        
-        if (isFirstLayer) {
-          isBackground = true;
-        } else {
-          // Verificar si está dentro de algún rectángulo existente
-          const isInsideAnyRectangle = existingLayers.some(([_, layer]) => {
-            const layerData = layer.toObject();
-            return layerData.type === LayerType.Rectangle && isPointInsideRectangle(position, layerData as RectangleLayer);
-          });
-          
-          if (!isInsideAnyRectangle) {
-            isBackground = true;
-          }
-        }
+      if (layerType === LayerType.Background) {
+        // Los BackgroundLayer no pueden tener padre
+        layer = new LiveObject<BackgroundLayer>({
+          type: LayerType.Background,
+          x: position.x,
+          y: position.y,
+          width: 448,
+          height: 950,
+          fill: { r: 217, g: 217, b: 217 },
+          stroke: { r: 217, g: 217, b: 217 },
+          opacity: 100,
+        });
       } else {
-        // Para otros tipos de layers, buscar el rectángulo padre que los contiene
+        // Para otros tipos de layers, buscar el background padre que los contiene
         const existingLayers = Array.from(liveLayers.entries());
         for (const [id, layer] of existingLayers) {
           const layerData = layer.toObject();
-          if (layerData.type === LayerType.Rectangle && isPointInsideRectangle(position, layerData as RectangleLayer)) {
+          if (layerData.type === LayerType.Background && isPointInsideBackground(position, layerData as BackgroundLayer)) {
             parentId = id;
             break;
           }
         }
-      }
 
-      if (layerType === LayerType.Rectangle) {
-        layer = new LiveObject<RectangleLayer>({
-          type: LayerType.Rectangle,
-          x: position.x,
-          y: position.y,
-          height: 100,
-          width: 100,
-          fill: { r: 217, g: 217, b: 217 },
-          stroke: { r: 217, g: 217, b: 217 },
-          opacity: 100,
-          isBackground,
-        });
-      } else if (layerType === LayerType.Ellipse) {
-        layer = new LiveObject<EllipseLayer>({
-          type: LayerType.Ellipse,
-          x: position.x,
-          y: position.y,
-          height: 100,
-          width: 100,
-          fill: { r: 217, g: 217, b: 217 },
-          stroke: { r: 217, g: 217, b: 217 },
-          opacity: 100,
-          parentId,
-        });
-      } else if (layerType === LayerType.Text) {
-        layer = new LiveObject<TextLayer>({
-          type: LayerType.Text,
-          x: position.x,
-          y: position.y,
-          height: 100,
-          width: 100,
-          fontSize: 16,
-          text: "Text",
-          fontWeight: 400,
-          fontFamily: "Inter",
-          stroke: { r: 217, g: 217, b: 217 },
-          fill: { r: 217, g: 217, b: 217 },
-          opacity: 100,
-          parentId,
-        });
-      } else if (layerType === LayerType.Input) {
-        layer = new LiveObject<InputLayer>({
-          type: LayerType.Input,
-          x: position.x,
-          y: position.y,
-          height: 40,
-          width: 200,
-          fill: { r: 255, g: 255, b: 255 },
-          stroke: { r: 200, g: 200, b: 200 },
-          opacity: 100,
-          cornerRadius: 4,
-          placeholder: "Enter text...",
-          parentId,
-        });
-      } else if (layerType === LayerType.Button) {
-        layer = new LiveObject<ButtonLayer>({
-          type: LayerType.Button,
-          x: position.x,
-          y: position.y,
-          height: 40,
-          width: 120,
-          fill: { r: 59, g: 130, b: 246 },
-          stroke: { r: 37, g: 99, b: 235 },
-          opacity: 100,
-          cornerRadius: 4,
-          text: "Button",
-          fontSize: 14,
-          fontFamily: "Inter",
-          textFill: { r: 255, g: 255, b: 255 },
-          parentId,
-        });
-      } else if (layerType === LayerType.Selector) {
-        layer = new LiveObject<SelectorLayer>({
-          type: LayerType.Selector,
-          x: position.x,
-          y: position.y,
-          height: 40,
-          width: 200,
-          fill: { r: 255, g: 255, b: 255 },
-          stroke: { r: 200, g: 200, b: 200 },
-          opacity: 100,
-          cornerRadius: 4,
-          options: ["Option 1", "Option 2", "Option 3"],
-          selectedOption: "Option 1",
-          fontSize: 14,
-          fontFamily: "Inter",
-          textFill: { r: 0, g: 0, b: 0 },
-          parentId,
-        });
-      } else if (layerType === LayerType.Checkbox) {
-        layer = new LiveObject<CheckboxLayer>({
-          type: LayerType.Checkbox,
-          x: position.x,
-          y: position.y,
-          height: 20,
-          width: 20,
-          fill: { r: 255, g: 255, b: 255 },
-          stroke: { r: 200, g: 200, b: 200 },
-          opacity: 100,
-          cornerRadius: 2,
-          checked: false,
-          label: "Checkbox",
-          fontSize: 14,
-          fontFamily: "Inter",
-          textFill: { r: 0, g: 0, b: 0 },
-          parentId,
-        });
-      } else if (layerType === LayerType.DatePicker) {
-        layer = new LiveObject<DatePickerLayer>({
-          type: LayerType.DatePicker,
-          x: position.x,
-          y: position.y,
-          height: 40,
-          width: 200,
-          fill: { r: 255, g: 255, b: 255 },
-          stroke: { r: 200, g: 200, b: 200 },
-          opacity: 100,
-          cornerRadius: 4,
-          value: "",
-          placeholder: "Select date...",
-          fontSize: 14,
-          fontFamily: "Inter",
-          textFill: { r: 0, g: 0, b: 0 },
-          format: "YYYY-MM-DD",
-          parentId,
-        });
-      } else if (layerType === LayerType.TimePicker) {
-        layer = new LiveObject<TimePickerLayer>({
-          type: LayerType.TimePicker,
-          x: position.x,
-          y: position.y,
-          height: 40,
-          width: 200,
-          fill: { r: 255, g: 255, b: 255 },
-          stroke: { r: 200, g: 200, b: 200 },
-          opacity: 100,
-          cornerRadius: 4,
-          value: "",
-          placeholder: "Select time...",
-          fontSize: 14,
-          fontFamily: "Inter",
-          textFill: { r: 0, g: 0, b: 0 },
-          format: "HH:mm",
-          parentId,
-        });
+        // Si no se encontró un padre y no es un BackgroundLayer, no se puede insertar
+        if (!parentId) {
+          alert("Los elementos deben ser colocados dentro de un Background");
+          return;
+        }
+
+        if (layerType === LayerType.Rectangle) {
+          layer = new LiveObject<RectangleLayer>({
+            type: LayerType.Rectangle,
+            x: position.x,
+            y: position.y,
+            height: 100,
+            width: 100,
+            fill: { r: 217, g: 217, b: 217 },
+            stroke: { r: 217, g: 217, b: 217 },
+            opacity: 100,
+            parentId,
+          });
+        } else if (layerType === LayerType.Ellipse) {
+          layer = new LiveObject<EllipseLayer>({
+            type: LayerType.Ellipse,
+            x: position.x,
+            y: position.y,
+            height: 100,
+            width: 100,
+            fill: { r: 217, g: 217, b: 217 },
+            stroke: { r: 217, g: 217, b: 217 },
+            opacity: 100,
+            parentId,
+          });
+        } else if (layerType === LayerType.Text) {
+          layer = new LiveObject<TextLayer>({
+            type: LayerType.Text,
+            x: position.x,
+            y: position.y,
+            height: 100,
+            width: 100,
+            fontSize: 16,
+            text: "Text",
+            fontWeight: 400,
+            fontFamily: "Inter",
+            stroke: { r: 217, g: 217, b: 217 },
+            fill: { r: 217, g: 217, b: 217 },
+            opacity: 100,
+            parentId,
+          });
+        } else if (layerType === LayerType.Input) {
+          layer = new LiveObject<InputLayer>({
+            type: LayerType.Input,
+            x: position.x,
+            y: position.y,
+            height: 40,
+            width: 200,
+            fill: { r: 255, g: 255, b: 255 },
+            stroke: { r: 200, g: 200, b: 200 },
+            opacity: 100,
+            cornerRadius: 4,
+            placeholder: "Enter text...",
+            parentId,
+          });
+        } else if (layerType === LayerType.Button) {
+          layer = new LiveObject<ButtonLayer>({
+            type: LayerType.Button,
+            x: position.x,
+            y: position.y,
+            height: 40,
+            width: 120,
+            fill: { r: 59, g: 130, b: 246 },
+            stroke: { r: 37, g: 99, b: 235 },
+            opacity: 100,
+            cornerRadius: 4,
+            text: "Button",
+            fontSize: 14,
+            fontFamily: "Inter",
+            textFill: { r: 255, g: 255, b: 255 },
+            parentId,
+          });
+        } else if (layerType === LayerType.Selector) {
+          layer = new LiveObject<SelectorLayer>({
+            type: LayerType.Selector,
+            x: position.x,
+            y: position.y,
+            height: 40,
+            width: 200,
+            fill: { r: 255, g: 255, b: 255 },
+            stroke: { r: 200, g: 200, b: 200 },
+            opacity: 100,
+            cornerRadius: 4,
+            options: ["Option 1", "Option 2", "Option 3"],
+            selectedOption: "Option 1",
+            fontSize: 14,
+            fontFamily: "Inter",
+            textFill: { r: 0, g: 0, b: 0 },
+            parentId,
+          });
+        } else if (layerType === LayerType.Checkbox) {
+          layer = new LiveObject<CheckboxLayer>({
+            type: LayerType.Checkbox,
+            x: position.x,
+            y: position.y,
+            height: 20,
+            width: 20,
+            fill: { r: 255, g: 255, b: 255 },
+            stroke: { r: 200, g: 200, b: 200 },
+            opacity: 100,
+            cornerRadius: 2,
+            checked: false,
+            label: "Checkbox",
+            fontSize: 14,
+            fontFamily: "Inter",
+            textFill: { r: 0, g: 0, b: 0 },
+            parentId,
+          });
+        } else if (layerType === LayerType.DatePicker) {
+          layer = new LiveObject<DatePickerLayer>({
+            type: LayerType.DatePicker,
+            x: position.x,
+            y: position.y,
+            height: 40,
+            width: 200,
+            fill: { r: 255, g: 255, b: 255 },
+            stroke: { r: 200, g: 200, b: 200 },
+            opacity: 100,
+            cornerRadius: 4,
+            value: "",
+            placeholder: "Select date...",
+            fontSize: 14,
+            fontFamily: "Inter",
+            textFill: { r: 0, g: 0, b: 0 },
+            format: "YYYY-MM-DD",
+            parentId,
+          });
+        } else if (layerType === LayerType.TimePicker) {
+          layer = new LiveObject<TimePickerLayer>({
+            type: LayerType.TimePicker,
+            x: position.x,
+            y: position.y,
+            height: 40,
+            width: 200,
+            fill: { r: 255, g: 255, b: 255 },
+            stroke: { r: 200, g: 200, b: 200 },
+            opacity: 100,
+            cornerRadius: 4,
+            value: "",
+            placeholder: "Select time...",
+            fontSize: 14,
+            fontFamily: "Inter",
+            textFill: { r: 0, g: 0, b: 0 },
+            format: "HH:mm",
+            parentId,
+          });
+        }
       }
 
       if (layer) {
@@ -922,24 +954,20 @@ useEffect(() => {
   }, []);
 
   const onPointerDown = useMutation(
-    ({}, e: React.PointerEvent) => {
+    ({ setMyPresence }, e: React.PointerEvent) => {
       const point = pointerEventToCanvasPoint(e, camera);
 
-      if (canvasState.mode === CanvasMode.Dragging) {
+      if (canvasState.mode === CanvasMode.Inserting) {
+        insertLayer(canvasState.layerType, point);
+      } else if (canvasState.mode === CanvasMode.Dragging) {
         setState({ mode: CanvasMode.Dragging, origin: point });
-        return;
+      } else {
+        setState({ mode: CanvasMode.Pressing, origin: point });
       }
 
-      if (canvasState.mode === CanvasMode.Inserting) return;
-
-      if (canvasState.mode === CanvasMode.Pencil) {
-        startDrawing(point, e.pressure);
-        return;
-      }
-
-      setState({ origin: point, mode: CanvasMode.Pressing });
+      setMyPresence({ cursor: point });
     },
-    [camera, canvasState.mode, setState, startDrawing],
+    [camera, canvasState, insertLayer],
   );
 
   const startMultiSelection = useCallback((current: Point, origin: Point) => {
@@ -977,10 +1005,7 @@ useEffect(() => {
         startMultiSelection(point, canvasState.origin);
       } else if (canvasState.mode === CanvasMode.SelectionNet) {
         updateSelectionNet(point, canvasState.origin);
-      } else if (
-        canvasState.mode === CanvasMode.Dragging &&
-        canvasState.origin !== null
-      ) {
+      } else if (canvasState.mode === CanvasMode.Dragging && canvasState.origin) {
         const deltaX = e.movementX;
         const deltaY = e.movementY;
 
@@ -1079,6 +1104,7 @@ useEffect(() => {
             }
           }}
           onFlutterClick={() => generateFlutterProject()}
+          onExportClick={() => exportToJSON()}
           isProcessingSketch={isProcessingSketch}
           isGeneratingPrompt={isGeneratingPrompt}
         />
@@ -1165,6 +1191,13 @@ useEffect(() => {
         othersWithAccessToRoom={othersWithAccessToRoom}
         leftIsMinimized={leftIsMinimized}
         setLeftIsMinimized={setLeftIsMinimized}
+      />
+      <input
+        type="file"
+        ref={sketchImageInputRef}
+        onChange={handleSketchUpload}
+        accept="image/*"
+        className="hidden"
       />
     </div>
   );

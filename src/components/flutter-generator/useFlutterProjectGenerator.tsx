@@ -11,6 +11,7 @@ import {
   generateCheckboxWidget,
   generateDatePickerWidget,
   generateTimePickerWidget,
+  generateBackgroundWidget,
 } from "./generators/widgetGenerators";
 import {
   generatePubspecYaml,
@@ -49,7 +50,7 @@ export const useFlutterProjectGenerator = (roomName: string) => {
 
       // Identificar backgrounds y agrupar hijos
       Object.entries(layersObject).forEach(([id, layer]) => {
-        if (layer.isBackground) {
+        if (layer.type === 10) {
           backgroundLayers.push({ id, layer });
           childLayers[id] = [];
         }
@@ -57,7 +58,7 @@ export const useFlutterProjectGenerator = (roomName: string) => {
 
       // Agrupar hijos con sus padres
       Object.entries(layersObject).forEach(([id, layer]) => {
-        if (!layer.isBackground && layer.parentId) {
+        if (layer.type !== 10 && layer.parentId) {
           if (childLayers[layer.parentId]) {
             (childLayers[layer.parentId] as Array<{id: string, layer: any}>).push({ id, layer });
           }
@@ -85,6 +86,7 @@ export const useFlutterProjectGenerator = (roomName: string) => {
         'lib/navigation_helper.dart': generateNavigationHelper(canvasData),
         'lib/screens/home_screen.dart': generateHomeScreen(canvasData),
         // Widgets individuales
+        'lib/widgets/background_widget.dart': generateBackgroundWidget(),
         'lib/widgets/rectangle_widget.dart': generateRectangleWidget(),
         'lib/widgets/ellipse_widget.dart': generateEllipseWidget(),
         'lib/widgets/text_widget.dart': generateTextWidget(),
