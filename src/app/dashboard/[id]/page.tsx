@@ -6,13 +6,14 @@ import { db } from "~/server/db";
 
 interface PageProps {
   params: Promise<{ id: string }>;
-  searchParams: { initialPrompt?: string };
+  searchParams: Promise<{ initialPrompt?: string }>;
 }
 
 export default async function Page({ params, searchParams }: PageProps) {
   const resolvedParams = await params;
+  const resolvedSearchParams = await searchParams;
   const id = resolvedParams.id;
-  const prompt = searchParams?.initialPrompt;
+  const prompt = resolvedSearchParams?.initialPrompt;
 
   const session = await auth();
 
@@ -38,7 +39,7 @@ export default async function Page({ params, searchParams }: PageProps) {
         roomName={room.title}
         roomId={id}
         othersWithAccessToRoom={room.roomInvites.map((x) => x.user)}
-        searchParams={searchParams}
+        searchParams={resolvedSearchParams}
       />
     </Room>
   );
