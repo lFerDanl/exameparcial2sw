@@ -5,12 +5,13 @@ import { auth } from "~/server/auth";
 import { db } from "~/server/db";
 
 interface PageProps {
-  params: { id: string };
+  params: Promise<{ id: string }>;
   searchParams: { initialPrompt?: string };
 }
 
 export default async function Page({ params, searchParams }: PageProps) {
-  const id = params.id;
+  const resolvedParams = await params;
+  const id = resolvedParams.id;
   const prompt = searchParams?.initialPrompt;
 
   const session = await auth();
