@@ -1,3 +1,4 @@
+import { useMutation } from "@liveblocks/react";
 import { DatePickerLayer } from "~/types";
 import { colorToCss } from "~/utils";
 
@@ -11,6 +12,21 @@ export default function DatePicker({
   onPointerDown: (e: React.PointerEvent, layerId: string) => void;
 }) {
   const { x, y, width, height, fill, stroke, opacity, cornerRadius, value, placeholder, fontSize, fontFamily, textFill } = layer;
+
+  const updateDate = useMutation(
+    ({ storage }, newValue: string) => {
+      const liveLayers = storage.get("layers");
+      const layer = liveLayers.get(id);
+      if (layer) {
+        layer.update({ value: newValue });
+      }
+    },
+    [id],
+  );
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    updateDate(e.target.value);
+  };
 
   return (
     <g className="group">
@@ -50,6 +66,7 @@ export default function DatePicker({
           <input
             type="date"
             value={value || ""}
+            onChange={handleChange}
             placeholder={placeholder || "Select date..."}
             style={{
               width: "100%",

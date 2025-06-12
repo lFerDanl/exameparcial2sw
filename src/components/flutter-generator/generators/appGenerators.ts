@@ -305,7 +305,7 @@ ${navigationOptions}
 };
 
 export const generateScreenWidget = (canvasData: any, backgroundId: string, screenName: string) => {
-  const { layers, childLayers, roomColor } = canvasData;
+  const { layers, childLayers } = canvasData;
   const backgroundLayer = layers[backgroundId];
   const children = childLayers[backgroundId] || [];
   
@@ -321,6 +321,7 @@ import '../widgets/selector_widget.dart';
 import '../widgets/checkbox_widget.dart';
 import '../widgets/date_picker_widget.dart';
 import '../widgets/time_picker_widget.dart';
+import '../widgets/background_widget.dart';
 import '../navigation_helper.dart';
 
 class ${className} extends StatefulWidget {
@@ -333,17 +334,9 @@ class ${className} extends StatefulWidget {
 class _${className}State extends State<${className}> {
   @override
   Widget build(BuildContext context) {
-    // Color de fondo del canvas (roomColor)
-    final backgroundColor = const Color.fromRGBO(30, 30, 30, 1.0);
-
-    // Coordenadas del background para calcular posiciones relativas
-    final bgX = ${backgroundLayer.x}.toDouble();
-    final bgY = ${backgroundLayer.y}.toDouble();
-
     return Scaffold(
-      backgroundColor: backgroundColor,
       appBar: AppBar(
-        title: const Text('Pantalla'),
+        title: Text('${screenName}'),
         backgroundColor: const Color.fromRGBO(50, 100, 200, 1.0),
         foregroundColor: Colors.white,
         elevation: 2,
@@ -357,20 +350,25 @@ class _${className}State extends State<${className}> {
           ),
         ],
       ),
-      body: Center(
+      body: SingleChildScrollView(
         child: Container(
           width: ${backgroundLayer.width}.toDouble(),
           height: ${backgroundLayer.height}.toDouble(),
-          decoration: BoxDecoration(
-            color: Color.fromRGBO(
-              ${backgroundLayer.fill?.r ?? 245},
-              ${backgroundLayer.fill?.g ?? 245},
-              ${backgroundLayer.fill?.b ?? 245},
-              (${backgroundLayer.opacity ?? 100}) / 100,
-            ),
-          ),
           child: Stack(
             children: [
+              // El fondo usando BackgroundWidget
+              BackgroundWidget(
+                key: ValueKey('${backgroundId}'),
+                x: 0, // Siempre en 0,0 porque es el contenedor base
+                y: 0,
+                width: ${backgroundLayer.width ?? 0},
+                height: ${backgroundLayer.height ?? 0},
+                fill: ${backgroundLayer.fill ? `{'r': ${backgroundLayer.fill.r}, 'g': ${backgroundLayer.fill.g}, 'b': ${backgroundLayer.fill.b}}` : 'null'},
+                stroke: ${backgroundLayer.stroke ? `{'r': ${backgroundLayer.stroke.r}, 'g': ${backgroundLayer.stroke.g}, 'b': ${backgroundLayer.stroke.b}}` : 'null'},
+                opacity: ${backgroundLayer.opacity ?? 100},
+                cornerRadius: ${backgroundLayer.cornerRadius ?? 'null'},
+              ),
+              // Elementos hijos
               ${generateChildWidgets(children, backgroundLayer)}
             ],
           ),
@@ -533,6 +531,18 @@ function generateChildWidgets(children: Array<{id: string, layer: any}>, backgro
                 fontFamily: '${layer.fontFamily ?? 'Inter'}',
                 textFill: ${layer.textFill ? `{'r': ${layer.textFill.r}, 'g': ${layer.textFill.g}, 'b': ${layer.textFill.b}}` : 'null'},
                 format: ${layer.format ? `'${layer.format}'` : 'null'},
+              ),`;
+      case 10: // Background
+        return `              BackgroundWidget(
+                key: ValueKey('${id}'),
+                x: ${relativeX},
+                y: ${relativeY},
+                width: ${layer.width ?? 0},
+                height: ${layer.height ?? 0},
+                fill: ${layer.fill ? `{'r': ${layer.fill.r}, 'g': ${layer.fill.g}, 'b': ${layer.fill.b}}` : 'null'},
+                stroke: ${layer.stroke ? `{'r': ${layer.stroke.r}, 'g': ${layer.stroke.g}, 'b': ${layer.stroke.b}}` : 'null'},
+                opacity: ${layer.opacity ?? 100},
+                cornerRadius: ${layer.cornerRadius ?? 'null'},
               ),`;
       default:
         return `              // Widget tipo ${layerType} no soportado`;

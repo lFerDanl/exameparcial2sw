@@ -1,10 +1,8 @@
-"use client";
-
 import { CanvasMode } from "~/types";
 import IconButton from "./IconButton";
-import { BiPointer } from "react-icons/bi";
+import { RiHand } from "react-icons/ri";
 
-export default function SelectionButton({
+export default function HandToolButton({
   isActive,
   onClick,
 }: {
@@ -13,7 +11,7 @@ export default function SelectionButton({
 }) {
   return (
     <IconButton isActive={isActive} onClick={onClick}>
-      <BiPointer className="h-5 w-5" />
+      <RiHand className="h-5 w-5" />
     </IconButton>
   );
-}
+} 

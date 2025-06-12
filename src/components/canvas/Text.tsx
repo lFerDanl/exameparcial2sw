@@ -30,6 +30,10 @@ export default function Text({
   const [inputValue, setInputValue] = useState(text);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  useEffect(() => {
+    setInputValue(text);
+  }, [text]);
+
   const updateText = useMutation(
     ({ storage }, newText: string) => {
       const liveLayers = storage.get("layers");

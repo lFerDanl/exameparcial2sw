@@ -826,7 +826,8 @@ class _DatePickerWidgetState extends State<DatePickerWidget> {
       ),
     );
   }
-}`;
+}
+`;
 };
 
 export const generateTimePickerWidget = () => {
@@ -1002,4 +1003,67 @@ class _TimePickerWidgetState extends State<TimePickerWidget> {
     );
   }
 }`;
+};
+
+export const generateBackgroundWidget = () => {
+  return `import 'package:flutter/material.dart';
+
+class BackgroundWidget extends StatelessWidget {
+  final double x;
+  final double y;
+  final double width;
+  final double height;
+  final Map<String, dynamic>? fill;
+  final Map<String, dynamic>? stroke;
+  final double? opacity;
+  final double? cornerRadius;
+
+  const BackgroundWidget({
+    super.key,
+    required this.x,
+    required this.y,
+    required this.width,
+    required this.height,
+    this.fill,
+    this.stroke,
+    this.opacity,
+    this.cornerRadius,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned(
+      left: x,
+      top: y,
+      child: Container(
+        width: width,
+        height: height,
+        decoration: BoxDecoration(
+          color: fill != null
+              ? Color.fromRGBO(
+                  fill!['r'] ?? 255,
+                  fill!['g'] ?? 255,
+                  fill!['b'] ?? 255,
+                  (opacity ?? 100) / 100,
+                )
+              : null,
+          border: stroke != null
+              ? Border.all(
+                  color: Color.fromRGBO(
+                    stroke!['r'] ?? 0,
+                    stroke!['g'] ?? 0,
+                    stroke!['b'] ?? 0,
+                    (opacity ?? 100) / 100,
+                  ),
+                )
+              : null,
+          borderRadius: cornerRadius != null 
+              ? BorderRadius.circular(cornerRadius!) 
+              : null,
+        ),
+      ),
+    );
+  }
+}
+`;
 }; 

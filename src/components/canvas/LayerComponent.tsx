@@ -11,6 +11,7 @@ import Selector from "./Selector";
 import Checkbox from "./Checkbox";
 import DatePicker from "./DatePicker";
 import TimePicker from "./TimePicker";
+import Background from "./Background";
 import { colorToCss } from "~/utils";
 
 const LayerComponent = memo(
@@ -74,6 +75,10 @@ const LayerComponent = memo(
       case LayerType.TimePicker:
         return (
           <TimePicker onPointerDown={onLayerPointerDown} id={id} layer={layer} />
+        );
+      case LayerType.Background:
+        return (
+          <Background onPointerDown={onLayerPointerDown} id={id} layer={layer} />
         );
       default:
         console.warn("Unknown layer type");
